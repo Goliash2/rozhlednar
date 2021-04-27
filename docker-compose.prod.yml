@@ -1,0 +1,39 @@
+version: "3.9"
+
+volumes:
+  rozhlednar-db:
+  rozhlednar-data:
+
+services:
+
+  mongodb:
+    image: mongo
+    volumes:
+      - rozhlednar-db:/data/db
+    container_name: db.rozhlednar
+    environment:
+      MONGO_INITDB_DATABASE: rozhlednar
+    restart: always
+
+  backend:
+    build: ./server
+    container_name: backend.rozhlednar
+    environment:
+      DATABASE_URL: mongodb://db.rozhlednar/rozhlednar
+    volumes:
+      - rozhlednar-data:/data
+    depends_on:
+      - mongodb
+    restart: always
+
+  frontend:
+    build: ./client
+    container_name: frontend.rozhlednar
+    restart: always
+    depends_on:
+      - backend
+
+networks:
+  default:
+    external:
+      name: global-npm-net

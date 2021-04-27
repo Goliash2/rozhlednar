@@ -1,0 +1,43 @@
+version: "3.9"
+
+volumes:
+  rozhlednar-data:
+  rozhlednar-db:
+
+services:
+
+  mongodb:
+    image: mongo
+    container_name: db.rozhlednar
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: rozhlednar
+    volumes:
+      - rozhlednar-db:/data/db
+
+  rozhlednar-server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    container_name: server.rozhlednar
+    environment:
+      DATABASE_URI: mongodb://db.rozhlednar/rozhlednar
+      AUTH_SAMESITE: 'false'
+      AUTH_SECURE: 'false'
+    volumes:
+      - ./server/src:/app/src
+      - rozhlednar-data:/data
+    depends_on:
+      - mongodb
+    ports:
+      - '3000:3000'
+
+  rozhlednar-client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    container_name: client.rozhlednar
+    volumes:
+      - ./client/src:/app/src
+    ports:
+      - '80:80'
